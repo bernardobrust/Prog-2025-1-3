@@ -1,0 +1,8 @@
+[
+{
+  "directory": "/home/be/C/facul/FileScanner/cmake-build-debug",
+  "command": "/usr/bin/cc  -I/home/be/C/facul/FileScanner/lib -std=gnu2x -o CMakeFiles/FileScanner.dir/src/main.c.o -c /home/be/C/facul/FileScanner/src/main.c",
+  "file": "/home/be/C/facul/FileScanner/src/main.c",
+  "output": "CMakeFiles/FileScanner.dir/src/main.c.o"
+}
+]
