@@ -3,16 +3,24 @@
 
 #include <astf.h>
 
+#define BUFFER_SIZE 100 // tamanho máximo de uma palavra
+
 int test_fn(int x) { return x * x; }
 
 void run() { printf("Running!\n"); }
 
 void test() {
-  astf_start_test_suite("Some test");
+  astf_start_test_suite("Read tests");
 
-  astf_AE_int(test_fn(3), 9);
-  astf_AE_int(test_fn(4), 16);
-  astf_AE_int(test_fn(5), 25);
+  FILE *test1 = fopen("../test-files/test1.txt", "r");
+
+  char word[BUFFER_SIZE];
+  while (fscanf(test1, "%s", word) == 1) {
+    printf("%s\n", word);
+  }
+
+  // verifica se a ultima palavra bate
+  astf_AE_string(word, "testes.");
 
   astf_retrieve_results();
 }
