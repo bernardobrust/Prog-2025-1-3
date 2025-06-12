@@ -4,21 +4,13 @@
 // Micro framework de teste
 #include "astf.h"
 
-#define BUFFER_SIZE 100 // Tamanho máximo de uma palavra
-#define TAMANHO_MAX_STRING 1024 // tamanho maximo da matriz de strings
+#define BUFFER_SIZE 1024 // Tamanho máximo de uma palavra
 
 #define FILE1 FILE *test1 = fopen("../test-files/test1.txt", "r")
 #define FILE2 FILE *test2 = fopen("../test-files/test2.txt", "r")
 #define FILE3 FILE *test3 = fopen("../test-files/test3.txt", "r")
 #define FILE4 FILE *test4 = fopen("../test-files/test4.txt", "r")
 #define FILE5 FILE *test5 = fopen("../test-files/test5.txt", "r")
-
-// funcao pra retornar o tamanho de uma string
-int our_strlen(const char *str){
-  int i;
-  for(i = 0; str[i] != '\0' && i < BUFFER_SIZE; i++);
-  return i;
-}
 
 // Função para encontrar o mínimo entre três números
 int min(int a, int b, int c) {
@@ -31,18 +23,18 @@ int min(int a, int b, int c) {
   }
 }
 
-// algoritmo pra medir a distancia entre duas strings por matrizes (fuzzy search)
-int levenshtein_distance(const char *s1, const char *s2) {
+// Algoritmo pra medir a distancia entre duas strings por matrizes (fuzzy search)
+int char_diff_tolerance(const char *s1, const char *s2) {
   size_t len1 = strlen(s1);
   size_t len2 = strlen(s2);
 
-  if (len1 >= TAMANHO_MAX_STRING || len2 >= TAMANHO_MAX_STRING) {
-    printf("Erro: A string é maior que o limite de %d caracteres.\n", TAMANHO_MAX_STRING);
+  if (len1 >= BUFFER_SIZE || len2 >= BUFFER_SIZE) {
+    printf("Erro: A string é maior que o limite de %d caracteres.\n", BUFFER_SIZE);
     return -1;
   }
 
-  // matriz tem um tamanho fixo, definido em tempo de compilação
-  int matrix[TAMANHO_MAX_STRING][TAMANHO_MAX_STRING];
+  // Matriz tem um tamanho fixo, definido em tempo de compilação
+  int matrix[BUFFER_SIZE][BUFFER_SIZE];
 
   for (size_t i = 0; i <= len1; i++) {
       for (size_t j = 0; j <= len2; j++) {
@@ -62,10 +54,6 @@ int levenshtein_distance(const char *s1, const char *s2) {
   return matrix[len1][len2];
 }
 
-int count_ocurences(char target[], FILE *file);
-
-
-
 /*
  * Função responsável por contar quantas ocorrências da
  * palavra tem num arquivo
@@ -79,7 +67,7 @@ int count_ocurences(char target[], FILE *file) {
     printf("%s\n", word);
 
     // Verificando se target e word batem
-    if (strcmp(target, word) == 0) {
+    if (char_diff_tolerance(word, target) == 0) {
       printf("Bateu!");
     }
   }
@@ -92,17 +80,33 @@ int count_ocurences(char target[], FILE *file) {
   * Fazer leitura, processamento e input aqui
 */
 void run() {
-  printf("Running!\n");
+  char folder[BUFFER_SIZE];
+  [[maybe_unused]] char file[BUFFER_SIZE];
+  char word[BUFFER_SIZE];
+  char cmd[BUFFER_SIZE];
 
+  //pedindo ao usuário para inserir a pasta
+  printf("Insira a pasta a ser analisada: ");
+  scanf("%s", folder);
 
-  // teste pra levenshtein (ta funcionando)
-  const char *arr[] = {"casa", "kasa", "kaza", "casas", "kazas", "cansas", "kansas"};
-  int num_palavras = sizeof(arr) / sizeof(arr[0]);
-  printf("Número de palavras: %d\n", num_palavras);
+  //criando uma variável de "extensão" para mostrar ao computador como percorrer os arquivos do diretório(pasta)
+  const char extension[] = "\\*.pdf";
 
-  for(int i = 0; i < num_palavras; i++){
-    printf("Distância de Levenshtein entre '%s' e 'casa': %d\n", arr[i], levenshtein_distance(arr[i], "casa"));
+  //utilizando um loop para colocar a extensão no final, a fim de listar os arquivos .pdf
+  int j = 0;
+  for (size_t i = strlen(folder); i <= strlen(folder) + strlen(extension); i++) {
+    folder[i] = extension[j];
+    j++;
   }
+  folder[strlen(folder)] = '\0';
+
+  //pedindo ao usuário a palavra a ser buscada
+  printf("Insira a palavra a ser buscada: ");
+  scanf("%s", word);
+
+  //rodando o comando
+  sprintf(cmd, "dir \"%s\" > ..\\lista.txt", folder);
+  system(cmd);
 }
 
 /*
@@ -111,7 +115,7 @@ void run() {
 */
 int test() {
   // Inicializanddo os teste
-  astf_start_test_suite("Read tests");
+  astf_start_test_suite("Testes de leitura");
 
   // Para abrir cada arquivo, basta digitar essa linha com o devido número
   FILE1;
@@ -121,6 +125,15 @@ int test() {
 
   // Verificando se "qualquer coisa que não tem num arquivo" não ocorre em "test1.txt"
   astf_AE_int(0, count_ocurences("qualquer coisa que não tem num arquivo", test1));
+
+  // Teste pra levenshtein (ta funcionando)
+  const char *arr[] = {"casa", "kasa", "kaza", "casas", "kazas", "cansas", "kansas"};
+  int num_palavras = sizeof(arr) / sizeof(arr[0]);
+  printf("Número de palavras: %d\n", num_palavras);
+
+  for(int i = 0; i < num_palavras; i++){
+    printf("Distância de Levenshtein entre '%s' e 'casa': %d\n", arr[i], char_diff_tolerance(arr[i], "casa"));
+  }
 
   // Verificando o resultado dos testes
   astf_retrieve_results();
