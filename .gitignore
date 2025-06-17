@@ -1,6 +1,5 @@
 .cache
 .idea/
-cmake-build-debug/
 compile-commands.json
 run.sh
 build/

@@ -1,2 +1,0 @@
-test-files/test1.pdf  test-files/test3.pdf  test-files/test5.pdf
-test-files/test2.pdf  test-files/test4.pdf
