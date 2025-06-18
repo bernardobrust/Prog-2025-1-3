@@ -16,6 +16,30 @@ int min(int a, int b, int c) {
     }
 }
 
+int eh_pontuacao(char c) {
+    const char *pontuacoes = ".,!?;:'\"()[]{}<>-";
+    if (strchr(pontuacoes, c) != NULL) {
+        return 1;
+    }
+    return 0;
+}
+
+void limpar_string_inplace(char *str) {
+    if (str == NULL) return;
+
+    int leitor = 0;
+    int escritor = 0;
+
+    while (str[leitor] != '\0') {
+        if (!eh_pontuacao(str[leitor])) {
+            str[escritor] = str[leitor];
+            escritor++;
+        }
+        leitor++;
+    }
+    str[escritor] = '\0';
+}
+
 // Algoritmo pra medir a distancia entre duas strings por matrizes (fuzzy
 // search)
 int char_diff_tolerance(const char *s1, const char *s2) {
@@ -29,7 +53,7 @@ int char_diff_tolerance(const char *s1, const char *s2) {
     }
 
     // Matriz tem um tamanho fixo, definido em tempo de compilação
-    int matrix[BUFFER_SIZE][BUFFER_SIZE];
+    static int matrix[BUFFER_SIZE][BUFFER_SIZE];
 
     for (size_t i = 0; i <= len1; i++) {
         for (size_t j = 0; j <= len2; j++) {
@@ -52,18 +76,18 @@ int char_diff_tolerance(const char *s1, const char *s2) {
  * Função responsável por contar quantas ocorrências da
  * palavra tem num arquivo
  */
-[[nodiscard]] int count_ocurences(const char target[], FILE *file) {
+int count_ocurences(const char target[], FILE *file, int tolerancia) {
     int count = 0;
-
     char word[BUFFER_SIZE];
-    // Loop que lê o arquivo palavra por palavra
-    while (fscanf(file, "%s", word) == 1) {
-        // Verificando se target e word batem (com tolerancia 1)
-        if (strcmp(word, target) == 0) {
+
+    while (fscanf(file, "%1023s", word) == 1) {
+        // Limpa a string de pontuações
+        limpar_string_inplace(word);
+        // A mágica acontece aqui: uma única chamada para todos os casos
+        if (char_diff_tolerance(word, target) <= tolerancia) {
             count++;
         }
     }
-
     return count;
 }
 
@@ -96,6 +120,17 @@ void run() {
     printf("> ");
     scanf("%s", word);
     printf("\n");
+
+    int tolerance = -1;
+    printf("Insira a tolerancia de erro (0 para exata, 1 para mais tolerante)): \n>");
+   while (tolerance < 0 || tolerance > 1)  {
+       scanf("%d", &tolerance);
+       if (tolerance < 0 || tolerance > 1) {
+           printf("Por favor, digite novamente um valor que seja entre 0 e 1\n>");
+       }
+
+   }
+    printf("tolerance: %d\n", tolerance);
 
     // Print nescessário do analizando arquivos
     printf("Analizando arquivos... \n");
@@ -147,7 +182,7 @@ void run() {
                 printf("Falha ao ler arquivo\n");
             }
 
-            const int ocurence = count_ocurences(word, file);
+            const int ocurence = count_ocurences(word, file, tolerance);
             fclose(file);
 
             ocurences[id] = ocurence;
@@ -175,26 +210,14 @@ void run() {
         }
     }
 
-    for (int i =  0; i <= id; i++) {
+    for (int i = 0; i <= id; i++) {
         printf("Frequencia %d da palavra %s no arquivo %s\n", ocurences[i], word, files[i]);
     }
 
     closedir(dir);
 }
 
-/*
- * Função responssável por testes
- * Testar o código aqui
- */
-int test() {
-    // Intencionalmente em branco
-    return 0;
-}
 
-int main(int argc, char *argv[]) {
-    if (argc > 1 && !strcmp(argv[1], "test")) {
-        test();
-    } else {
-        run();
-    }
+int main() {
+    run();
 }
