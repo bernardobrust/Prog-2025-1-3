@@ -1,12 +1,10 @@
-# Sla, algm muda isso depois
+# Scanner de arquivos para buscar palavras (com tolerância)
 
-> Tamo dependendo do fernando pra essa
-
-Abram PR ou issue qualquer coisa
+De autoria do templo Shaolin
 
 Funções:
-- João cuida da contagem de palavras (função count_ocurences)
-- Jonathan cuida da saída de dados (mostra a contagem, apresenta count e os arquivos)
-- [ x ] Cauã cuida da tolerância (função q vc já fez)
-- Miguel cuida da entrada (recebe o nome do arquivo, palavra de busca)
-- Matheus cuida dos testes (escreve os testes e faz o slide)
+- [x] João cuida da contagem de palavras (função count_ocurences)
+- [x] Jonathan cuida da saída de dados (mostra a contagem, apresenta count e os arquivos)
+- [x] Cauã cuida da tolerância
+- [x] Miguel cuida da entrada (recebe o nome do arquivo, palavra de busca)
+- [x] Matheus escreve e faz o slide
