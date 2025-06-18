@@ -16,7 +16,7 @@ int min(int a, int b, int c) {
     }
 }
 
-int eh_pontuacao(char c) {
+int is_pontuation(char c) {
     const char *pontuacoes = ".,!?;:'\"()[]{}<>-";
     if (strchr(pontuacoes, c) != NULL) {
         return 1;
@@ -24,14 +24,14 @@ int eh_pontuacao(char c) {
     return 0;
 }
 
-void limpar_string_inplace(char *str) {
+void clean_string(char *str) {
     if (str == NULL) return;
 
     int leitor = 0;
     int escritor = 0;
 
     while (str[leitor] != '\0') {
-        if (!eh_pontuacao(str[leitor])) {
+        if (!is_pontuation(str[leitor])) {
             str[escritor] = str[leitor];
             escritor++;
         }
@@ -82,7 +82,7 @@ int count_ocurences(const char target[], FILE *file, int tolerancia) {
 
     while (fscanf(file, "%1023s", word) == 1) {
         // Limpa a string de pontuações
-        limpar_string_inplace(word);
+        clean_string(word);
         // A mágica acontece aqui: uma única chamada para todos os casos
         if (char_diff_tolerance(word, target) <= tolerancia) {
             count++;
