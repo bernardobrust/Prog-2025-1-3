@@ -95,19 +95,67 @@ int count_ocurences(const char target[], FILE *file, const int tolerance) {
  * Fazer leitura, processamento e input aqui
  */
 void run() {
-    char folder[BUFFER_SIZE];
-    char word[BUFFER_SIZE];
-    struct dirent *directory;
+  char folder[BUFFER_SIZE];
+  char word[BUFFER_SIZE];
+  char cmd[BUFFER_SIZE * 2];
 
-    // Pedindo ao usuário para inserir a pasta
-    printf("Insira o nome da pasta a ser analisada: \n");
-    printf("> ");
-    scanf("%s", folder);
-    printf("\n");
+  // Pedindo ao usuário para inserir a pasta
+  printf("Insira o nome da pasta a ser analisada: \n");
+  printf("> ");
+  scanf("%s", folder);
+  printf("\n");
 
-    DIR *dir = opendir(folder);
-    if (dir == NULL) {
-        printf("Falha ao abrir a pasta");
+  // Lendo o diretório
+
+  // Criando uma variável de "extensão" para mostrar ao computador como
+  // Percorrer os arquivos do diretório(pasta)
+  const char pdf[] = "/*.pdf";
+
+  int j = 0;
+  for (size_t i = strlen(folder); i <= strlen(folder) + strlen(pdf); i++) {
+    folder[i] = pdf[j];
+    j++;
+  }
+  folder[strlen(folder)] = '\0';
+
+  // Pedindo ao usuário a palavra a ser buscada
+  printf("Insira a palavra a ser buscada: \n");
+  printf("> ");
+  scanf("%s", word);
+  printf("\n");
+
+  // Print nescessário do analizando arquivos
+  printf("Analizando arquivos... \n");
+  printf("\n");
+
+  // Rodando o comando
+  sprintf(cmd, "cd .. && dir \%s > lista.txt", folder);
+  system(cmd);
+
+  // Coletando os arquivos
+  // Lendo o arquivo "lista.txt"
+  FILE *list = fopen(LIST, "r");
+
+  if (list == NULL) {
+    printf("Erro na abertura da lista\n");
+  }
+
+  // Loop que lê o arquivo palavra por palavra
+  char pdf_file[BUFFER_SIZE];
+  while (fscanf(list, "%s", pdf_file) == 1) {
+    // Extraindo os nomes dos arquivos e lendo seus .txt's equivalentes
+    char txt[] = "txt";
+    char txt_file[BUFFER_SIZE];
+
+    // Atribuindo temporáriamente o nome do pdf ao arquivo que leremos
+    strcpy(txt_file, pdf_file);
+
+    // Formatando corretamente o nome do arquivo a ser lido
+    int j = 0;
+    for (size_t i = strlen(txt_file) - strlen(txt); i <= strlen(txt_file);
+         i++) {
+      txt_file[i] = txt[j];
+      j++;
     }
 
     // Criando uma variável de "extensão" para mostrar ao computador como
@@ -215,7 +263,6 @@ void run() {
 
     closedir(dir);
 }
-
 
 int main() {
     run();
