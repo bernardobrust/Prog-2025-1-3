@@ -9,14 +9,14 @@
 int min(int a, int b, int c) {
     if (a < b && a < c) {
         return a;
-    } else if (b < c) {
-        return b;
-    } else {
-        return c;
     }
+    if (b < c) {
+        return b;
+    }
+    return c;
 }
 
-int is_pontuation(char c) {
+[[nodiscard]] int is_pontuation(char c) {
     const char *pontuacoes = ".,!?;:'\"()[]{}<>-";
     if (strchr(pontuacoes, c) != NULL) {
         return 1;
@@ -27,17 +27,16 @@ int is_pontuation(char c) {
 void clean_string(char *str) {
     if (str == NULL) return;
 
-    int leitor = 0;
-    int escritor = 0;
+    int reader = 0, writer = 0;
 
-    while (str[leitor] != '\0') {
-        if (!is_pontuation(str[leitor])) {
-            str[escritor] = str[leitor];
-            escritor++;
+    while (str[reader] != '\0') {
+        if (!is_pontuation(str[reader])) {
+            str[writer] = str[reader];
+            writer++;
         }
-        leitor++;
+        reader++;
     }
-    str[escritor] = '\0';
+    str[writer] = '\0';
 }
 
 // Algoritmo pra medir a distancia entre duas strings por matrizes (fuzzy
@@ -62,7 +61,7 @@ int char_diff_tolerance(const char *s1, const char *s2) {
             } else if (j == 0) {
                 matrix[i][j] = (int) i;
             } else {
-                int cost = (s1[i - 1] == s2[j - 1]) ? 0 : 1;
+                const int cost = (s1[i - 1] == s2[j - 1]) ? 0 : 1;
                 matrix[i][j] = min(matrix[i - 1][j] + 1, matrix[i][j - 1] + 1,
                                    matrix[i - 1][j - 1] + cost);
             }
@@ -76,7 +75,7 @@ int char_diff_tolerance(const char *s1, const char *s2) {
  * Função responsável por contar quantas ocorrências da
  * palavra tem num arquivo
  */
-int count_ocurences(const char target[], FILE *file, int tolerancia) {
+int count_ocurences(const char target[], FILE *file, const int tolerance) {
     int count = 0;
     char word[BUFFER_SIZE];
 
@@ -84,7 +83,7 @@ int count_ocurences(const char target[], FILE *file, int tolerancia) {
         // Limpa a string de pontuações
         clean_string(word);
         // A mágica acontece aqui: uma única chamada para todos os casos
-        if (char_diff_tolerance(word, target) <= tolerancia) {
+        if (char_diff_tolerance(word, target) <= tolerance) {
             count++;
         }
     }
