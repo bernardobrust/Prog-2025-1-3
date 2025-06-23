@@ -3,7 +3,6 @@
 #include <string.h>
 
 #define BUFFER_SIZE 1024 // Tamanho máximo de uma palavra
-#define LIST "../lista.txt"
 
 // Função para encontrar o mínimo entre três números
 int min(int a, int b, int c) {
@@ -52,7 +51,7 @@ int char_diff_tolerance(const char *s1, const char *s2) {
  * Função responsável por contar quantas ocorrências da
  * palavra tem num arquivo
  */
-[[nodiscard]] int count_ocurences(char target[], FILE *file) {
+int count_ocurences(char target[], FILE *file) {
   int count = 0;
 
   char word[BUFFER_SIZE];
@@ -82,7 +81,7 @@ void run() {
   scanf("%s", folder);
   printf("\n");
 
-  // --- Lendo o diretório
+  // Lendo o diretório
 
   // Criando uma variável de "extensão" para mostrar ao computador como
   // Percorrer os arquivos do diretório(pasta)
@@ -109,7 +108,7 @@ void run() {
   sprintf(cmd, "cd .. && dir \%s > lista.txt", folder);
   system(cmd);
 
-  // --- Coletando os arquivos
+  // Coletando os arquivos
   // Lendo o arquivo "lista.txt"
   FILE *list = fopen(LIST, "r");
 
@@ -152,19 +151,6 @@ void run() {
   }
 }
 
-/*
- * Função responssável por testes
- * Testar o código aqui
- */
-int test() {
-  // Intencionalmente em branco
-  return 0;
-}
-
 int main(int argc, char *argv[]) {
-  if (argc > 1 && !strcmp(argv[1], "test")) {
-    test();
-  } else {
-    run();
-  }
+  run();
 }
