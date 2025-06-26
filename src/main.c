@@ -1,93 +1,96 @@
+#include <dirent.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <dirent.h>
 
 #define BUFFER_SIZE 1024 // Tamanho máximo de uma palavra
 
 // Função para encontrar o mínimo entre três números
-int min(int a, int b, int c) {
-    if (a < b && a < c) {
-        return a;
-    }
-    if (b < c) {
-        return b;
-    }
-    return c;
+[[nodiscard]] int min(const int a, const int b, const int c) {
+  if (a < b && a < c) {
+    return a;
+  }
+  if (b < c) {
+    return b;
+  }
+  return c;
 }
 
-[[nodiscard]] int is_pontuation(char c) {
-    const char *pontuacoes = ".,!?;:'\"()[]{}<>-";
-    if (strchr(pontuacoes, c) != NULL) {
-        return 1;
-    }
-    return 0;
+[[nodiscard]] int is_ponctuation(const char c) {
+  const char *ponctuation = "._$,!?;:'\"()[]{}<>-";
+  if (strchr(ponctuation, c) != NULL) {
+    return 1;
+  }
+  return 0;
 }
 
 void clean_string(char *str) {
-    if (str == NULL) return;
+  if (str == NULL) {
+    return;
+}
 
-    int reader = 0, writer = 0;
+  int reader = 0, writer = 0;
 
-    while (str[reader] != '\0') {
-        if (!is_pontuation(str[reader])) {
-            str[writer] = str[reader];
-            writer++;
-        }
-        reader++;
+  while (str[reader] != '\0') {
+    if (!is_ponctuation(str[reader])) {
+      str[writer] = str[reader];
+      writer++;
     }
-    str[writer] = '\0';
+    reader++;
+  }
+  str[writer] = '\0';
 }
 
 // Algoritmo pra medir a distancia entre duas strings por matrizes (fuzzy
 // search)
-int char_diff_tolerance(const char *s1, const char *s2) {
-    size_t len1 = strlen(s1);
-    size_t len2 = strlen(s2);
+[[nodiscard]] int char_diff_tolerance(const char *s1, const char *s2) {
+  const size_t len1 = strlen(s1);
+  const size_t len2 = strlen(s2);
 
-    if (len1 >= BUFFER_SIZE || len2 >= BUFFER_SIZE) {
-        printf("Erro: A string é maior que o limite de %d caracteres.\n",
-               BUFFER_SIZE);
-        return -1;
+  if (len1 >= BUFFER_SIZE || len2 >= BUFFER_SIZE) {
+    printf("Erro: A string é maior que o limite de %d caracteres.\n",
+           BUFFER_SIZE);
+    return -1;
+  }
+
+  // Matriz tem um tamanho fixo, definido em tempo de compilação
+  static int matrix[BUFFER_SIZE][BUFFER_SIZE];
+
+  for (size_t i = 0; i <= len1; i++) {
+    for (size_t j = 0; j <= len2; j++) {
+      if (i == 0) {
+        matrix[i][j] = (int)j;
+      } else if (j == 0) {
+        matrix[i][j] = (int)i;
+      } else {
+        const int cost = (s1[i - 1] == s2[j - 1]) ? 0 : 1;
+        matrix[i][j] = min(matrix[i - 1][j] + 1, matrix[i][j - 1] + 1,
+                           matrix[i - 1][j - 1] + cost);
+      }
     }
+  }
 
-    // Matriz tem um tamanho fixo, definido em tempo de compilação
-    static int matrix[BUFFER_SIZE][BUFFER_SIZE];
-
-    for (size_t i = 0; i <= len1; i++) {
-        for (size_t j = 0; j <= len2; j++) {
-            if (i == 0) {
-                matrix[i][j] = (int) j;
-            } else if (j == 0) {
-                matrix[i][j] = (int) i;
-            } else {
-                const int cost = (s1[i - 1] == s2[j - 1]) ? 0 : 1;
-                matrix[i][j] = min(matrix[i - 1][j] + 1, matrix[i][j - 1] + 1,
-                                   matrix[i - 1][j - 1] + cost);
-            }
-        }
-    }
-
-    return matrix[len1][len2];
+  return matrix[len1][len2];
 }
 
 /*
  * Função responsável por contar quantas ocorrências da
  * palavra tem num arquivo
  */
-int count_ocurences(const char target[], FILE *file, const int tolerance) {
-    int count = 0;
-    char word[BUFFER_SIZE];
+[[nodiscard]] int count_ocurences(const char target[], FILE *file,
+                                  const int tolerance) {
+  int count = 0;
+  char word[BUFFER_SIZE];
 
-    while (fscanf(file, "%1023s", word) == 1) {
-        // Limpa a string de pontuações
-        clean_string(word);
-        // A mágica acontece aqui: uma única chamada para todos os casos
-        if (char_diff_tolerance(word, target) <= tolerance) {
-            count++;
-        }
+  while (fscanf(file, "%1023s", word) == 1) {
+    // Limpa a string de pontuações
+    clean_string(word);
+    // A mágica acontece aqui: uma única chamada para todos os casos
+    if (char_diff_tolerance(word, target) <= tolerance) {
+      count++;
     }
-    return count;
+  }
+  return count;
 }
 
 /*
@@ -97,7 +100,7 @@ int count_ocurences(const char target[], FILE *file, const int tolerance) {
 void run() {
   char folder[BUFFER_SIZE];
   char word[BUFFER_SIZE];
-  char cmd[BUFFER_SIZE * 2];
+  struct dirent *directory;
 
   // Pedindo ao usuário para inserir a pasta
   printf("Insira o nome da pasta a ser analisada: \n");
@@ -105,165 +108,141 @@ void run() {
   scanf("%s", folder);
   printf("\n");
 
-  // Lendo o diretório
+  DIR *dir = opendir(folder);
+  if (dir == NULL) {
+    printf("Falha ao abrir a pasta");
+  }
 
   // Criando uma variável de "extensão" para mostrar ao computador como
   // Percorrer os arquivos do diretório(pasta)
-  const char pdf[] = "/*.pdf";
-
-  int j = 0;
-  for (size_t i = strlen(folder); i <= strlen(folder) + strlen(pdf); i++) {
-    folder[i] = pdf[j];
-    j++;
-  }
-  folder[strlen(folder)] = '\0';
-
+  const char pdf[] = ".pdf";
+  const char txt[] = ".txt";
   // Pedindo ao usuário a palavra a ser buscada
   printf("Insira a palavra a ser buscada: \n");
   printf("> ");
   scanf("%s", word);
   printf("\n");
 
-  // Print nescessário do analizando arquivos
+  int tolerance = -1;
+  printf("Insira a tolerancia de erro (0 para exata, 1 para mais tolerante): "
+         "\n>");
+  scanf("%d", &tolerance);
+
+  // Print necessário do analisando arquivos
   printf("Analizando arquivos... \n");
   printf("\n");
 
-  // Rodando o comando
-  sprintf(cmd, "cd .. && dir \%s > lista.txt", folder);
-  system(cmd);
+  int id = -1;
+  int ocurences[BUFFER_SIZE];
+  char files[BUFFER_SIZE][BUFFER_SIZE];
+  while ((directory = readdir(dir)) != NULL) {
+    // Dados do arquivo
+    char filename[BUFFER_SIZE];
+    strcpy(filename, directory->d_name);
+    size_t filename_len = strlen(filename);
 
-  // Coletando os arquivos
-  // Lendo o arquivo "lista.txt"
-  FILE *list = fopen(LIST, "r");
+    // Guard clause para tamanhdo do nome
+    if (filename_len < 4) {
+      continue;
+    }
 
-  if (list == NULL) {
-    printf("Erro na abertura da lista\n");
-  }
+    bool is_pdf = true;
+    filename[filename_len] = '\0';
 
-  // Loop que lê o arquivo palavra por palavra
-  char pdf_file[BUFFER_SIZE];
-  while (fscanf(list, "%s", pdf_file) == 1) {
-    // Extraindo os nomes dos arquivos e lendo seus .txt's equivalentes
-    char txt[] = "txt";
-    char txt_file[BUFFER_SIZE];
-
-    // Atribuindo temporáriamente o nome do pdf ao arquivo que leremos
-    strcpy(txt_file, pdf_file);
-
-    // Formatando corretamente o nome do arquivo a ser lido
+    // Indexador externo
     int j = 0;
-    for (size_t i = strlen(txt_file) - strlen(txt); i <= strlen(txt_file);
-         i++) {
-      txt_file[i] = txt[j];
+    for (size_t i = filename_len - strlen(pdf); i <= filename_len; i++) {
+      if (filename[i] != pdf[j]) {
+        is_pdf = false;
+      }
       j++;
     }
 
-    // Criando uma variável de "extensão" para mostrar ao computador como
-    // Percorrer os arquivos do diretório(pasta)
-    const char pdf[] = ".pdf";
-    const char txt[] = ".txt";
-    // Pedindo ao usuário a palavra a ser buscada
-    printf("Insira a palavra a ser buscada: \n");
-    printf("> ");
-    scanf("%s", word);
-    printf("\n");
-
-    int tolerance = -1;
-    printf("Insira a tolerancia de erro (0 para exata, 1 para mais tolerante)): \n>");
-   while (tolerance < 0 || tolerance > 1)  {
-       scanf("%d", &tolerance);
-       if (tolerance < 0 || tolerance > 1) {
-           printf("Por favor, digite novamente um valor que seja entre 0 e 1\n>");
-       }
-
-   }
-    printf("tolerance: %d\n", tolerance);
-
-    // Print nescessário do analizando arquivos
-    printf("Analizando arquivos... \n");
-    printf("\n");
-
-    int id = -1;
-    int ocurences[BUFFER_SIZE];
-    char files[BUFFER_SIZE][BUFFER_SIZE];
-    while ((directory = readdir(dir)) != NULL) {
-        if (directory->d_namlen < 4) continue;
-
-        bool is_pdf = true;
-
-        directory->d_name[strlen(directory->d_name)] = '\0';
-        int j = 0;
-        for (size_t i = strlen(directory->d_name) - strlen(pdf); i <= strlen(directory->d_name); i++) {
-            if (directory->d_name[i] != pdf[j]) {
-                is_pdf = false;
-            }
-            j++;
-        }
-
-        if (is_pdf) {
-            id++;
-
-            char txt_filename[BUFFER_SIZE];
-            j = 0;
-            for (size_t i = 0; i <= strlen(directory->d_name) - strlen(txt); i++) {
-                txt_filename[i] = directory->d_name[j];
-                j++;
-            }
-
-            j = 0;
-            for (size_t i = strlen(directory->d_name) - strlen(txt); i < strlen(directory->d_name); i++) {
-                txt_filename[i] = txt[j];
-                j++;
-            }
-
-            char file_path[BUFFER_SIZE];
-            for (size_t i = 0; i <= strlen(directory->d_name) + strlen(folder) + 1; i++) {
-                if (i <= strlen(directory->d_name)) file_path[i] = folder[i];
-                else if (i == strlen(directory->d_name) + 1) file_path[i] = '\\';
-                else file_path[i] = txt_filename[i - strlen(directory->d_name) - 2];
-            }
-
-            txt_filename[strlen(txt_filename)] = '\0';
-            FILE *file = fopen(file_path, "r");
-            if (file == NULL) {
-                printf("Falha ao ler arquivo\n");
-            }
-
-            const int ocurence = count_ocurences(word, file, tolerance);
-            fclose(file);
-
-            ocurences[id] = ocurence;
-            strcpy(files[id], directory->d_name);
-        }
+    printf("Pre-guard type\n");
+    // Guard clause para tipo de arquivo
+    if (!is_pdf) {
+      continue;
     }
 
-    printf("Busca finalizada!\n\n");
-    printf("Ocorrencias em ordem crescente: \n");
+    id++;
 
-    for (int i = 0; i <= id; i++) {
-        for (int j = i; j <= id; j++) {
-            if (ocurences[j] < ocurences[i]) {
-                int temp_o = ocurences[i];
-                char temp_filename[BUFFER_SIZE];
-                strcpy(temp_filename, files[i]);
-
-                // int
-                ocurences[i] = ocurences[j];
-                ocurences[j] = temp_o;
-
-                strcpy(files[i], files[j]);
-                strcpy(files[j], temp_filename);
-            }
-        }
+    // Criando o .txt
+    char txt_filename[BUFFER_SIZE];
+    j = 0;
+    for (size_t i = 0; i <= filename_len - strlen(txt); i++) {
+      txt_filename[i] = filename[j];
+      j++;
     }
 
-    for (int i = 0; i <= id; i++) {
-        printf("Frequencia %d da palavra %s no arquivo %s\n", ocurences[i], word, files[i]);
+    j = 0;
+    for (size_t i = filename_len - strlen(txt); i < filename_len; i++) {
+      txt_filename[i] = txt[j];
+      j++;
     }
 
-    closedir(dir);
+    // Criando o "path" do arquivo
+    char file_path[BUFFER_SIZE];
+    for (size_t i = 0; i <= filename_len + strlen(folder) + 1; i++) {
+      if (i <= filename_len) {
+        file_path[i] = folder[i];
+      } else if (i == filename_len + 1) {
+        // Aqui inserimos a '/' no caminho
+        // !!! Adendo Importante:
+        // No caso do windos, deve ser um '\\'
+        // Em linux ou mac, deve ser '/'
+        #if defined(_WIN_32) || defined(_WIN_64)
+          file_path[i] = '\\';
+        #else
+          file_path[i] = '/';
+        #endif
+      } else {
+        file_path[i] = txt_filename[i - filename_len - 2];
+      }
+    }
+
+    // Abrindo o aqruivo pelo path
+    txt_filename[strlen(txt_filename)] = '\0';
+    FILE *file = fopen(file_path, "r");
+    if (file == NULL) {
+      printf("Falha ao ler arquivo\n");
+      continue;
+    }
+
+    const int ocurence = count_ocurences(word, file, tolerance);
+    fclose(file);
+
+    ocurences[id] = ocurence;
+    strcpy(files[id], filename);
+  }
+
+  printf("Busca finalizada!\n\n");
+  printf("Ocorrencias em ordem crescente: \n");
+
+  // Algoritmo de sort
+  // Optamos por um simples O(n^2) mesmo pois performance não é essencial
+  for (int i = 0; i <= id; i++) {
+    for (int j = i; j <= id; j++) {
+      if (ocurences[j] < ocurences[i]) {
+        int temp_o = ocurences[i];
+        char temp_filename[BUFFER_SIZE];
+        strcpy(temp_filename, files[i]);
+
+        // int
+        ocurences[i] = ocurences[j];
+        ocurences[j] = temp_o;
+
+        strcpy(files[i], files[j]);
+        strcpy(files[j], temp_filename);
+      }
+    }
+  }
+
+  for (int i = 0; i <= id; i++) {
+    printf("Frequencia %d da palavra %s no arquivo %s\n", ocurences[i], word,
+           files[i]);
+  }
+
+  closedir(dir);
 }
 
-int main() {
-    run();
-}
+int main() { run(); }

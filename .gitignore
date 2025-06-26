@@ -3,4 +3,5 @@
 compile-commands.json
 run.sh
 build/
+cmake-build-debug/
 # CMake
