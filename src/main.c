@@ -124,7 +124,7 @@ void run() {
   printf("\n");
 
   int tolerance = -1;
-  printf("Insira a tolerancia de erro (0 para exata, 1 para mais tolerante): "
+  printf("Insira a tolerancia (margem de erro de busca): "
          "\n>");
   scanf("%d", &tolerance);
 
@@ -158,7 +158,6 @@ void run() {
       j++;
     }
 
-    printf("Pre-guard type\n");
     // Guard clause para tipo de arquivo
     if (!is_pdf) {
       continue;
