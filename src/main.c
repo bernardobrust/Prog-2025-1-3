@@ -111,6 +111,7 @@ void run() {
   DIR *dir = opendir(folder);
   if (dir == NULL) {
     printf("Falha ao abrir a pasta");
+return 1;
   }
 
   // Criando uma variável de "extensão" para mostrar ao computador como
@@ -203,7 +204,7 @@ void run() {
     txt_filename[strlen(txt_filename)] = '\0';
     FILE *file = fopen(file_path, "r");
     if (file == NULL) {
-      printf("Falha ao ler arquivo\n");
+      printf("Falha ao ler arquivo em: %s\n", file_path);
       continue;
     }
 
