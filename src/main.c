@@ -25,9 +25,7 @@
 }
 
 void clean_string(char *str) {
-  if (str == NULL) {
-    return;
-}
+  if (str == NULL) return;
 
   int reader = 0, writer = 0;
 
@@ -246,3 +244,4 @@ return 1;
 }
 
 int main() { run(); }
+
